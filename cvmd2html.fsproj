@@ -1,0 +1,21 @@
+<!-- 0.0.1.0 -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net481</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\AssemblyInfo.fs" />
+    <Compile Include="src\Util.fs" />
+    <Compile Include="src\Parameters.fs" />
+    <Compile Include="src\Package.fs" />
+    <Compile Include="src\Setup.fs" />
+    <Compile Include="src\ErrorLog.fs" />
+    <Compile Include="Program.fs" />
+    <Reference Include="Microsoft.VisualBasic.dll" />
+    <Reference Include="Interop.IWshRuntimeLibrary.dll">
+      <HintPath>.\lib\Interop.IWshRuntimeLibrary.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
