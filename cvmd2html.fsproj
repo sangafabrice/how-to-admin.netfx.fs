@@ -1,0 +1,15 @@
+<!-- 0.0.1.0 -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net481</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\AssemblyInfo.fs;src\Util.fs;src\Parameters.fs;src\Package.fs;src\Setup.fs;src\ErrorLog.fs;Program.fs" />
+    <Reference Include="Interop.IWshRuntimeLibrary.dll">
+      <HintPath>.\lib\Interop.IWshRuntimeLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Management.dll" />
+  </ItemGroup>
+</Project>

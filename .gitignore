@@ -1,0 +1,7 @@
+*.exe
+*.lnk
+bin/**
+obj/**
+lib/**
+test.*
+src/Resource.cs
