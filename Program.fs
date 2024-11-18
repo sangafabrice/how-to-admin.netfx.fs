@@ -1,31 +1,23 @@
 /// <summary>Launch the shortcut's target PowerShell script with the markdown.</summary>
-/// <version>0.0.1.4</version>
+/// <version>0.0.1.5</version>
 
 module cvmd2html.Program
 
 open System
 open System.Diagnostics
 open System.ComponentModel
-open System.Reflection
 open System.Management
-open ROOT.CIMV2
+open System.Security.Principal
 open Util
 open Parameters
 open Package
 open Setup
 open ErrorLog
 
-[<assembly: AssemblyTitle("CvMd2Html")>]
-
-do ()
-
 /// <summary>Check if the process is elevated.</summary>
 /// <returns>True if the running process is elevated, false otherwise.</returns>
 let private IsCurrentProcessElevated () =
-  let HKU = 0x80000003u
-  let mutable bGranted = false
-  StdRegProv.CheckAccess HKU @"S-1-5-19\Environment" &bGranted |> ignore
-  bGranted
+  (new WindowsPrincipal(WindowsIdentity.GetCurrent())).IsInRole(WindowsBuiltInRole.Administrator)
 
 /// <summary>Request administrator privileges.</summary>
 /// <param name="args">The command line arguments.</param>
