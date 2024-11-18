@@ -1,4 +1,4 @@
-<!-- 0.0.1.4 -->
+<!-- 0.0.1.5 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -6,19 +6,10 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\AssemblyInfo.fs" />
-    <Compile Include="src\Util.fs" />
-    <Compile Include="src\Parameters.fs" />
-    <Compile Include="src\Package.fs" />
-    <Compile Include="src\Setup.fs" />
-    <Compile Include="src\ErrorLog.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="src\AssemblyInfo.fs;src\Util.fs;src\Parameters.fs;src\Package.fs;src\Setup.fs;src\ErrorLog.fs;Program.fs" />
     <Reference Include="Interop.IWshRuntimeLibrary.dll">
       <HintPath>.\lib\Interop.IWshRuntimeLibrary.dll</HintPath>
     </Reference>
     <Reference Include="System.Management.dll" />
-    <ProjectReference Include=".\StdRegProv.fsproj">
-      <Name>StdRegProv</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>
