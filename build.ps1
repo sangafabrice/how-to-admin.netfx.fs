@@ -1,4 +1,4 @@
-<#PSScriptInfo .VERSION 1.0.4#>
+<#PSScriptInfo .VERSION 1.0.5#>
 
 using namespace System.Management.Automation
 [CmdletBinding()]
@@ -27,16 +27,8 @@ param ()
   Save-ProjectPackage $PSScriptRoot 'bin'
   Set-ProjectVersion $PSScriptRoot
 
-  $AssemblyInfoFs = "$(($SrcDir = "$PSScriptRoot\src"))\AssemblyInfo.fs"
-
-  function ImportMgmtClass([string] $ClassName) {
-    $FileName = $ClassName.Replace('_', '.')
-    fsc.exe /nologo /warn:0 /target:library /out:$(($ClassDll = "$BinDir\$FileName.dll")) /reference:System.Management.dll $AssemblyInfoFs "$SrcDir\$FileName.fs"
-    return $ClassDll
-  }
-
   # Compile the source code with fsc.exe. Add it to the PATH before executing the build script.
-  fsc.exe /nologo /target:$($DebugPreference -eq 'Continue' ? 'exe':'winexe') /win32icon:"$PSScriptRoot\menu.ico" /reference:$(ImportMgmtClass StdRegProv) /reference:System.Management.dll /reference:"$BinDir\Interop.IWshRuntimeLibrary.dll" /reference:$(Get-WpfLibrary PresentationFramework) /reference:$(Get-WpfLibrary PresentationCore) /reference:$(Get-WpfLibrary WindowsBase) /reference:System.Xaml.dll /out:$(($ConvertExe = "$BinDir\cvmd2html.exe")) $AssemblyInfoFs "$SrcDir\Util.fs" "$SrcDir\Parameters.fs" "$SrcDir\Package.fs" "$SrcDir\Setup.fs" "$SrcDir\ErrorLog.fs" "$PSScriptRoot\Program.fs"
+  fsc.exe /nologo /target:$($DebugPreference -eq 'Continue' ? 'exe':'winexe') /win32icon:"$PSScriptRoot\menu.ico" /reference:System.Management.dll /reference:"$BinDir\Interop.IWshRuntimeLibrary.dll" /reference:$(Get-WpfLibrary PresentationFramework) /reference:$(Get-WpfLibrary PresentationCore) /reference:$(Get-WpfLibrary WindowsBase) /reference:System.Xaml.dll /out:$(($ConvertExe = "$BinDir\cvmd2html.exe")) "$(($SrcDir = "$PSScriptRoot\src"))\AssemblyInfo.fs" "$SrcDir\Util.fs" "$SrcDir\Parameters.fs" "$SrcDir\Package.fs" "$SrcDir\Setup.fs" "$SrcDir\ErrorLog.fs" "$PSScriptRoot\Program.fs"
 
   if ($LASTEXITCODE -eq 0) {
     Write-Host "Output file $ConvertExe written." @HostColorArgs -NoNewline
