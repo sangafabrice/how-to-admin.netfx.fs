@@ -1,13 +1,12 @@
 /// <summary>Launch the shortcut's target PowerShell script with the markdown.</summary>
-/// <version>0.0.1.1</version>
+/// <version>0.0.1.2</version>
 
 module cvmd2html.Program
 
 open System
-open System.Reflection
 open System.Diagnostics
-open Microsoft.VisualBasic
-open Shell32
+open System.ComponentModel
+open WbemScripting
 open Util
 open Parameters
 open Package
@@ -18,108 +17,20 @@ open ErrorLog
 /// <returns>True if the running process is elevated, false otherwise.</returns>
 let private IsCurrentProcessElevated () =
   let HKU = 0x80000003
-  let mutable stdRegProvMethods =
-    StdRegProv.GetType().InvokeMember(
-      "Methods_",
-      BindingFlags.GetProperty,
-      null,
-      StdRegProv,
-      [||]
-    )
-  let mutable checkAccessMethod =
-    stdRegProvMethods.GetType().InvokeMember(
-      "Item",
-      BindingFlags.InvokeMethod,
-      null,
-      stdRegProvMethods,
-      [|"CheckAccess"|]
-    )
-  let mutable checkAccessMethodParams =
-    checkAccessMethod.GetType().InvokeMember(
-      "InParameters",
-      BindingFlags.GetProperty,
-      null,
-      checkAccessMethod,
-      [||]
-    )
-  let mutable inParams =
-    checkAccessMethodParams.GetType().InvokeMember(
-      "SpawnInstance_",
-      BindingFlags.InvokeMethod,
-      null,
-      checkAccessMethodParams,
-      [||]
-    )
-  let mutable inParamProperties =
-    inParams.GetType().InvokeMember(
-      "Properties_",
-      BindingFlags.GetProperty,
-      null,
-      inParams,
-      [||]
-    )
-  let mutable hDefKey =
-    inParamProperties.GetType().InvokeMember(
-      "Item",
-      BindingFlags.InvokeMethod,
-      null,
-      inParamProperties,
-      [|"hDefKey"|]
-    )
-  hDefKey.GetType().InvokeMember(
-    "Value",
-    BindingFlags.SetProperty,
-    null,
-    hDefKey,
-    [|HKU|]
-  ) |> ignore
-  let mutable sSubKeyName =
-    inParamProperties.GetType().InvokeMember(
-      "Item",
-      BindingFlags.InvokeMethod,
-      null,
-      inParamProperties,
-      [|"sSubKeyName"|]
-    )
-  sSubKeyName.GetType().InvokeMember(
-    "Value",
-    BindingFlags.SetProperty,
-    null,
-    sSubKeyName,
-    [|@"S-1-5-19\Environment"|]
-  ) |> ignore
-  let mutable outParams =
-    StdRegProv.GetType().InvokeMember(
-      "ExecMethod_",
-      BindingFlags.InvokeMethod,
-      null,
-      StdRegProv,
-      [|"CheckAccess"; inParams|]
-    )
-  let mutable outParamsProperties =
-    outParams.GetType().InvokeMember(
-      "Properties_",
-      BindingFlags.GetProperty,
-      null,
-      outParams,
-      [||]
-    )
-  let mutable bGranted =
-    outParamsProperties.GetType().InvokeMember(
-      "Item",
-      BindingFlags.InvokeMethod,
-      null,
-      outParamsProperties,
-      [|"bGranted"|]
-    )
+  let mutable stdRegProvMethods = StdRegProv.Methods_
+  let mutable checkAccessMethod = stdRegProvMethods.Item "CheckAccess"
+  let mutable checkAccessMethodParams = checkAccessMethod.InParameters
+  let mutable inParams = checkAccessMethodParams.SpawnInstance_()
+  let mutable inParamProperties = inParams.Properties_
+  let mutable hDefKey = inParamProperties.["hDefKey"]
+  let mutable sSubKeyName = inParamProperties.["sSubKeyName"]
+  hDefKey.Value <- ref HKU
+  sSubKeyName.Value <- ref @"S-1-5-19\Environment"
+  let mutable outParams = StdRegProv.ExecMethod_(checkAccessMethod.Name, inParams)
+  let mutable outParamsProperties = outParams.Properties_
+  let mutable bGranted = outParamsProperties.["bGranted"]
   try
-    bGranted.GetType().InvokeMember(
-      "Value",
-      BindingFlags.GetProperty,
-      null,
-      bGranted,
-      [||]
-    ) :?> bool
+    bGranted.Value :?> bool
   finally
     ReleaseComObject &bGranted
     ReleaseComObject &outParamsProperties
@@ -136,16 +47,19 @@ let private IsCurrentProcessElevated () =
 /// <param name="args">The command line arguments.</param>
 let private RequestAdminPrivileges (args: string array) =
   if not (IsCurrentProcessElevated()) then
-    let mutable shell = new ShellClass()
-    shell.ShellExecute(
-      AssemblyLocation,
-      (if args.Length > 0 then String.Format(@"""{0}""", String.Join(@""" """, args)) else ""),
-      Missing.Value,
-      "runas",
-      Constants.vbHidden
-    )
-    ReleaseComObject &shell
-    Quit 0
+    try
+      let startInfo = new ProcessStartInfo(
+        AssemblyLocation,
+        (if args.Length > 0 then String.Format(@"""{0}""", String.Join(@""" """, args)) else "")
+      )
+      startInfo.UseShellExecute <- true
+      startInfo.Verb <- "runas"
+      startInfo.WindowStyle <- ProcessWindowStyle.Hidden
+      Process.Start startInfo |> ignore
+      Quit 0
+    with
+      | :? Win32Exception -> Quit 0
+      | _ -> Quit 1
 
 /// <summary>Wait for the process exit.</summary>
 /// <param name="processId">The process identifier.</param>
@@ -154,46 +68,12 @@ let private WaitForExit (processId: int) =
   // The process termination event query. Win32_ProcessStopTrace requires admin rights to be used.
   let wqlQuery = "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='cmd.exe' AND ProcessId=" + string(processId)
   // Wait for the process to exit.
-  let mutable watcher =
-    WSH.GetObject().GetType().InvokeMember(
-      "ExecNotificationQuery",
-      BindingFlags.InvokeMethod,
-      null,
-      WSH.GetObject(),
-      [|wqlQuery|]
-    )
-  let mutable cmdProcess =
-    watcher.GetType().InvokeMember(
-      "NextEvent",
-      BindingFlags.InvokeMethod,
-      null,
-      watcher,
-      [||]
-    )
-  let mutable cmdProcessProperties =
-    cmdProcess.GetType().InvokeMember(
-      "Properties_",
-      BindingFlags.GetProperty,
-      null,
-      cmdProcess,
-      [||]
-    )
-  let mutable ExitStatus =
-    cmdProcessProperties.GetType().InvokeMember(
-      "Item",
-      BindingFlags.InvokeMethod,
-      null,
-      cmdProcessProperties,
-      [|"ExitStatus"|]
-    )
+  let mutable watcher = (unbox<SWbemServices> (WSH.GetObject())).ExecNotificationQuery(wqlQuery)
+  let mutable cmdProcess = watcher.NextEvent()
+  let mutable cmdProcessProperties = cmdProcess.Properties_
+  let mutable ExitStatus = cmdProcessProperties.["ExitStatus"]
   try
-    ExitStatus.GetType().InvokeMember(
-      "Value",
-      BindingFlags.GetProperty,
-      null,
-      ExitStatus,
-      [||]
-    ) :?> int
+    ExitStatus.Value :?> int
   finally
     ReleaseComObject &ExitStatus
     ReleaseComObject &cmdProcessProperties

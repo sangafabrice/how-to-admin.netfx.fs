@@ -1,4 +1,4 @@
-<#PSScriptInfo .VERSION 1.0.1#>
+<#PSScriptInfo .VERSION 1.0.2#>
 
 [CmdletBinding()]
 param ([string] $Root, [string] $DirName = 'bin')
@@ -6,4 +6,3 @@ param ([string] $Root, [string] $DirName = 'bin')
 function ImportTypeLibrary([string] $TypeLibPath, [string] $Namespace) { TlbImp.exe /nologo /silent $TypeLibPath /out:"$LibDir\Interop.$Namespace.dll" /namespace:$Namespace }
 ImportTypeLibrary 'C:\Windows\System32\wshom.ocx' 'IWshRuntimeLibrary'
 ImportTypeLibrary 'C:\Windows\System32\wbem\wbemdisp.tlb' 'WbemScripting'
-ImportTypeLibrary 'C:\Windows\System32\Shell32.dll' 'Shell32'

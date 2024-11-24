@@ -6,7 +6,7 @@ open System.Reflection
 [<assembly: AssemblyCopyright("© 2024 sangafabrice")>]
 [<assembly: AssemblyCompany("sangafabrice")>]
 [<assembly: AssemblyTitle("CvMd2Html")>]
-[<assembly: AssemblyInformationalVersion("0.0.1.23")>]
-[<assembly: AssemblyVersion("0.0.1.23")>]
+[<assembly: AssemblyInformationalVersion("0.0.1.143")>]
+[<assembly: AssemblyVersion("0.0.1.143")>]
 
 do ()
