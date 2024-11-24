@@ -1,5 +1,5 @@
 /// <summary>Some utility methods.</summary>
-/// <version>0.0.1.0</version>
+/// <version>0.0.1.1</version>
 
 module cvmd2html.Util
 
@@ -8,43 +8,22 @@ open System.IO
 open System.Runtime.InteropServices
 open System.Windows
 open System.Reflection
+open WbemScripting
 
 let internal AssemblyLocation = Assembly.GetExecutingAssembly().Location
 
-let mutable private wmiService = null
+let mutable private wbemLocator = new SWbemLocatorClass()
+
+let mutable private wmiService = wbemLocator.ConnectServer()
 
 type internal WSH =
-  /// <summary>Create object.</summary>
-  /// <param name="progId">The com class ProgId.</param>
-  /// <returns>A COM object.</returns>
-  static member CreateObject (progId) =
-    Activator.CreateInstance(Type.GetTypeFromProgID(progId))
-
   /// <summary>Get a WMI object or class.</summary>
   /// <param name="monikerPath">The moniker path.</param>
   /// <returns>A WMI object or class.</returns>
   static member GetObject (?monikerPath: string) =
     let monikerPath = defaultArg monikerPath ""
-    if String.IsNullOrEmpty(monikerPath) then wmiService
-    else
-      wmiService.GetType().InvokeMember(
-        "Get",
-        BindingFlags.InvokeMethod,
-        null,
-        wmiService,
-        [|monikerPath|]
-      )
-
-let mutable private wbemLocator = WSH.CreateObject "WbemScripting.SWbemLocator"
-
-wmiService <-
-  wbemLocator.GetType().InvokeMember(
-    "ConnectServer",
-    BindingFlags.InvokeMethod,
-    null,
-    wbemLocator,
-    [||]
-  )
+    if String.IsNullOrEmpty(monikerPath) then box wmiService
+    else box (wmiService.Get monikerPath)
 
 /// <summary>The registry com object.</summary>
 let mutable internal StdRegProv = WSH.GetObject "StdRegProv"

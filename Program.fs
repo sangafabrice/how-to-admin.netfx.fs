@@ -1,5 +1,5 @@
 /// <summary>Launch the shortcut's target PowerShell script with the markdown.</summary>
-/// <version>0.0.1.0</version>
+/// <version>0.0.1.1</version>
 
 module cvmd2html.Program
 
@@ -7,6 +7,7 @@ open System
 open System.Reflection
 open System.Diagnostics
 open Microsoft.VisualBasic
+open Shell32
 open Util
 open Parameters
 open Package
@@ -132,16 +133,17 @@ let private IsCurrentProcessElevated () =
     ReleaseComObject &stdRegProvMethods
 
 /// <summary>Request administrator privileges.</summary>
-let private RequestAdminPrivileges () =
+/// <param name="args">The command line arguments.</param>
+let private RequestAdminPrivileges (args: string array) =
   if not (IsCurrentProcessElevated()) then
-    let mutable shell = WSH.CreateObject "Shell.Application"
-    shell.GetType().InvokeMember(
-      "ShellExecute",
-      BindingFlags.InvokeMethod,
-      null,
-      shell,
-      [|AssemblyLocation; Interaction.Command(); Missing.Value; "runas"; Constants.vbHidden|]
-    ) |> ignore
+    let mutable shell = new ShellClass()
+    shell.ShellExecute(
+      AssemblyLocation,
+      (if args.Length > 0 then String.Format(@"""{0}""", String.Join(@""" """, args)) else ""),
+      Missing.Value,
+      "runas",
+      Constants.vbHidden
+    )
     ReleaseComObject &shell
     Quit 0
 
@@ -200,8 +202,8 @@ let private WaitForExit (processId: int) =
 
 [<EntryPoint>]
 let main args =
-  RequestAdminPrivileges()
-  match CommandLineArgs with
+  RequestAdminPrivileges args
+  match ParseCommandLine args with
   | Markdown(path) ->
     let CMD_EXE = @"C:\Windows\System32\cmd.exe"
     let CMD_LINE_FORMAT = @"/d /c """"{0}"" 2> ""{1}"""""

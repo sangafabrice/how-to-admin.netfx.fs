@@ -1,4 +1,4 @@
-<!-- 0.0.1.0 -->
+<!-- 0.0.1.1 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -16,6 +16,12 @@
     <Reference Include="Microsoft.VisualBasic.dll" />
     <Reference Include="Interop.IWshRuntimeLibrary.dll">
       <HintPath>.\lib\Interop.IWshRuntimeLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.WbemScripting.dll">
+      <HintPath>.\lib\Interop.WbemScripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.Shell32.dll">
+      <HintPath>.\lib\Interop.Shell32.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

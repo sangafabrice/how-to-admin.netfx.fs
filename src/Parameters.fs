@@ -1,11 +1,10 @@
 /// <summary>The parsed parameters.</summary>
-/// <version>0.0.1.0</version>
+/// <version>0.0.1.1</version>
 
 module cvmd2html.Parameters
 
 open System
 open System.Text
-open System.Linq
 open Util
 
 type internal InParams =
@@ -69,7 +68,4 @@ let private ShowHelp (inParams: InParams) =
 /// <summary>Parse the command line arguments.</summary>
 /// <param name="args">Command line arguments.</param>
 /// <returns>The parsed input parameters.</returns>
-let private ParseCommandLine = Parse >> ShowHelp
-
-/// <summary>The command line arguments object.</summary>
-let internal CommandLineArgs = ParseCommandLine(Environment.GetCommandLineArgs().Skip(1).ToArray())
+let internal ParseCommandLine = Parse >> ShowHelp
