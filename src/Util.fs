@@ -1,5 +1,5 @@
 /// <summary>Some utility methods.</summary>
-/// <version>0.0.1.1</version>
+/// <version>0.0.1.2</version>
 
 module cvmd2html.Util
 
@@ -26,7 +26,7 @@ type internal WSH =
     else box (wmiService.Get monikerPath)
 
 /// <summary>The registry com object.</summary>
-let mutable internal StdRegProv = WSH.GetObject "StdRegProv"
+let mutable internal StdRegProv = unbox<SWbemObject> (WSH.GetObject "StdRegProv")
 
 /// <summary>Generate a random file path.</summary>
 /// <param name="extension">The file extension.</param>
