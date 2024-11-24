@@ -1,4 +1,4 @@
-<#PSScriptInfo .VERSION 1.0.0#>
+<#PSScriptInfo .VERSION 1.0.1#>
 
 using namespace System.Management.Automation
 [CmdletBinding()]
@@ -25,9 +25,10 @@ param ()
   New-Item $BinDir -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
   Copy-Item "$PSScriptRoot\rsc" -Destination $BinDir -Recurse
   Save-ProjectPackage $PSScriptRoot 'bin'
+  Set-ProjectVersion $PSScriptRoot
 
   # Compile the source code with fsc.exe. Add it to the PATH before executing the build script.
-  fsc.exe /nologo /target:$($DebugPreference -eq 'Continue' ? 'exe':'winexe') /win32icon:"$PSScriptRoot\menu.ico" /reference:"$BinDir\Interop.IWshRuntimeLibrary.dll" /reference:$(Get-WpfLibrary PresentationFramework) /reference:$(Get-WpfLibrary PresentationCore) /reference:$(Get-WpfLibrary WindowsBase) /reference:System.Xaml.dll /reference:Microsoft.VisualBasic.dll /out:$(($ConvertExe = "$BinDir\cvmd2html.exe")) "$(($SrcDir = "$PSScriptRoot\src"))\AssemblyInfo.fs" "$SrcDir\Util.fs" "$SrcDir\Parameters.fs" "$SrcDir\Package.fs" "$SrcDir\Setup.fs" "$SrcDir\ErrorLog.fs" "$PSScriptRoot\Program.fs"
+  fsc.exe /nologo /target:$($DebugPreference -eq 'Continue' ? 'exe':'winexe') /win32icon:"$PSScriptRoot\menu.ico" /reference:"$BinDir\Interop.WbemScripting.dll" /reference:"$BinDir\Interop.Shell32.dll" /reference:"$BinDir\Interop.IWshRuntimeLibrary.dll" /reference:$(Get-WpfLibrary PresentationFramework) /reference:$(Get-WpfLibrary PresentationCore) /reference:$(Get-WpfLibrary WindowsBase) /reference:System.Xaml.dll /reference:Microsoft.VisualBasic.dll /out:$(($ConvertExe = "$BinDir\cvmd2html.exe")) "$(($SrcDir = "$PSScriptRoot\src"))\AssemblyInfo.fs" "$SrcDir\Util.fs" "$SrcDir\Parameters.fs" "$SrcDir\Package.fs" "$SrcDir\Setup.fs" "$SrcDir\ErrorLog.fs" "$PSScriptRoot\Program.fs"
 
   if ($LASTEXITCODE -eq 0) {
     Write-Host "Output file $ConvertExe written." @HostColorArgs -NoNewline
