@@ -1,0 +1,14 @@
+<!-- 0.0.1.0 -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net481</TargetFramework>
+    <AssemblyName>StdRegProv</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\AssemblyInfo.fs;src\StdRegProv.fs" />
+    <Reference Include="Interop.WbemScripting.dll">
+      <HintPath>.\lib\Interop.WbemScripting.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

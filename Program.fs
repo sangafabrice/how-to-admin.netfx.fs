@@ -1,47 +1,31 @@
 /// <summary>Launch the shortcut's target PowerShell script with the markdown.</summary>
-/// <version>0.0.1.2</version>
+/// <version>0.0.1.3</version>
 
 module cvmd2html.Program
 
 open System
 open System.Diagnostics
 open System.ComponentModel
+open System.Reflection
 open WbemScripting
+open ROOT.CIMV2
 open Util
 open Parameters
 open Package
 open Setup
 open ErrorLog
 
+[<assembly: AssemblyTitle("CvMd2Html")>]
+
+do ()
+
 /// <summary>Check if the process is elevated.</summary>
 /// <returns>True if the running process is elevated, false otherwise.</returns>
 let private IsCurrentProcessElevated () =
-  let HKU = 0x80000003
-  let mutable stdRegProvMethods = StdRegProv.Methods_
-  let mutable checkAccessMethod = stdRegProvMethods.Item "CheckAccess"
-  let mutable checkAccessMethodParams = checkAccessMethod.InParameters
-  let mutable inParams = checkAccessMethodParams.SpawnInstance_()
-  let mutable inParamProperties = inParams.Properties_
-  let mutable hDefKey = inParamProperties.["hDefKey"]
-  let mutable sSubKeyName = inParamProperties.["sSubKeyName"]
-  hDefKey.Value <- ref HKU
-  sSubKeyName.Value <- ref @"S-1-5-19\Environment"
-  let mutable outParams = StdRegProv.ExecMethod_(checkAccessMethod.Name, inParams)
-  let mutable outParamsProperties = outParams.Properties_
-  let mutable bGranted = outParamsProperties.["bGranted"]
-  try
-    bGranted.Value :?> bool
-  finally
-    ReleaseComObject &bGranted
-    ReleaseComObject &outParamsProperties
-    ReleaseComObject &outParams
-    ReleaseComObject &sSubKeyName
-    ReleaseComObject &hDefKey
-    ReleaseComObject &inParamProperties
-    ReleaseComObject &inParams
-    ReleaseComObject &checkAccessMethodParams
-    ReleaseComObject &checkAccessMethod
-    ReleaseComObject &stdRegProvMethods
+  let HKU = 0x80000003u
+  let mutable bGranted = false
+  StdRegProv.CheckAccess (HKU, @"S-1-5-19\Environment", &bGranted) |> ignore
+  bGranted
 
 /// <summary>Request administrator privileges.</summary>
 /// <param name="args">The command line arguments.</param>
@@ -68,7 +52,9 @@ let private WaitForExit (processId: int) =
   // The process termination event query. Win32_ProcessStopTrace requires admin rights to be used.
   let wqlQuery = "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='cmd.exe' AND ProcessId=" + string(processId)
   // Wait for the process to exit.
-  let mutable watcher = (unbox<SWbemServices> (WSH.GetObject())).ExecNotificationQuery(wqlQuery)
+  let mutable wbemLocator = new SWbemLocatorClass()
+  let mutable wmiService = wbemLocator.ConnectServer()
+  let mutable watcher = wmiService.ExecNotificationQuery(wqlQuery)
   let mutable cmdProcess = watcher.NextEvent()
   let mutable cmdProcessProperties = cmdProcess.Properties_
   let mutable ExitStatus = cmdProcessProperties.["ExitStatus"]
@@ -79,6 +65,8 @@ let private WaitForExit (processId: int) =
     ReleaseComObject &cmdProcessProperties
     ReleaseComObject &cmdProcess
     ReleaseComObject &watcher
+    ReleaseComObject &wmiService
+    ReleaseComObject &wbemLocator
 
 [<EntryPoint>]
 let main args =

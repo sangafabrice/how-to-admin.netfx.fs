@@ -1,5 +1,5 @@
 /// <summary>Some utility methods.</summary>
-/// <version>0.0.1.2</version>
+/// <version>0.0.1.3</version>
 
 module cvmd2html.Util
 
@@ -8,25 +8,8 @@ open System.IO
 open System.Runtime.InteropServices
 open System.Windows
 open System.Reflection
-open WbemScripting
 
 let internal AssemblyLocation = Assembly.GetExecutingAssembly().Location
-
-let mutable private wbemLocator = new SWbemLocatorClass()
-
-let mutable private wmiService = wbemLocator.ConnectServer()
-
-type internal WSH =
-  /// <summary>Get a WMI object or class.</summary>
-  /// <param name="monikerPath">The moniker path.</param>
-  /// <returns>A WMI object or class.</returns>
-  static member GetObject (?monikerPath: string) =
-    let monikerPath = defaultArg monikerPath ""
-    if String.IsNullOrEmpty(monikerPath) then box wmiService
-    else box (wmiService.Get monikerPath)
-
-/// <summary>The registry com object.</summary>
-let mutable internal StdRegProv = unbox<SWbemObject> (WSH.GetObject "StdRegProv")
 
 /// <summary>Generate a random file path.</summary>
 /// <param name="extension">The file extension.</param>
@@ -58,15 +41,8 @@ let internal ReleaseComObject<'a> (comObject: byref<'a>) =
   Marshal.FinalReleaseComObject comObject |> ignore
   comObject <- Unchecked.defaultof<'a>
 
-/// <summary>Destroy the COM objects.</summary>
-let internal Dispose () =
-  ReleaseComObject &StdRegProv
-  ReleaseComObject &wmiService
-  ReleaseComObject &wbemLocator
-
 /// <summary>Clean up and quit.</summary>
 /// <param name="exitCode">The exit code.</param>
 let internal Quit (exitCode: int) =
-  Dispose()
   GC.Collect()
   Environment.Exit exitCode
