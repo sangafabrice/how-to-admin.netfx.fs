@@ -1,5 +1,5 @@
 /// <summary>Launch the shortcut's target PowerShell script with the markdown.</summary>
-/// <version>0.0.1.3</version>
+/// <version>0.0.1.4</version>
 
 module cvmd2html.Program
 
@@ -7,7 +7,7 @@ open System
 open System.Diagnostics
 open System.ComponentModel
 open System.Reflection
-open WbemScripting
+open System.Management
 open ROOT.CIMV2
 open Util
 open Parameters
@@ -24,7 +24,7 @@ do ()
 let private IsCurrentProcessElevated () =
   let HKU = 0x80000003u
   let mutable bGranted = false
-  StdRegProv.CheckAccess (HKU, @"S-1-5-19\Environment", &bGranted) |> ignore
+  StdRegProv.CheckAccess HKU @"S-1-5-19\Environment" &bGranted |> ignore
   bGranted
 
 /// <summary>Request administrator privileges.</summary>
@@ -52,21 +52,7 @@ let private WaitForExit (processId: int) =
   // The process termination event query. Win32_ProcessStopTrace requires admin rights to be used.
   let wqlQuery = "SELECT * FROM Win32_ProcessStopTrace WHERE ProcessName='cmd.exe' AND ProcessId=" + string(processId)
   // Wait for the process to exit.
-  let mutable wbemLocator = new SWbemLocatorClass()
-  let mutable wmiService = wbemLocator.ConnectServer()
-  let mutable watcher = wmiService.ExecNotificationQuery(wqlQuery)
-  let mutable cmdProcess = watcher.NextEvent()
-  let mutable cmdProcessProperties = cmdProcess.Properties_
-  let mutable ExitStatus = cmdProcessProperties.["ExitStatus"]
-  try
-    ExitStatus.Value :?> int
-  finally
-    ReleaseComObject &ExitStatus
-    ReleaseComObject &cmdProcessProperties
-    ReleaseComObject &cmdProcess
-    ReleaseComObject &watcher
-    ReleaseComObject &wmiService
-    ReleaseComObject &wbemLocator
+  (new ManagementEventWatcher(wqlQuery)).WaitForNextEvent().["ExitStatus"] :?> uint
 
 [<EntryPoint>]
 let main args =
@@ -81,7 +67,7 @@ let main args =
       String.Format(CMD_LINE_FORMAT, IconLink.Path, ErrorLog.Path)
     )
     startInfo.WindowStyle <- ProcessWindowStyle.Hidden
-    if (WaitForExit (Process.Start(startInfo).Id)) <> 0 then
+    if (WaitForExit (Process.Start(startInfo).Id)) <> 0u then
       ErrorLog.Read()
       ErrorLog.Delete()
     IconLink.Delete()
