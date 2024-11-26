@@ -1,4 +1,4 @@
-<!-- 0.0.1.3 -->
+<!-- 0.0.1.4 -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -16,9 +16,7 @@
     <Reference Include="Interop.IWshRuntimeLibrary.dll">
       <HintPath>.\lib\Interop.IWshRuntimeLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="Interop.WbemScripting.dll">
-      <HintPath>.\lib\Interop.WbemScripting.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Management.dll" />
     <ProjectReference Include=".\StdRegProv.fsproj">
       <Name>StdRegProv</Name>
     </ProjectReference>
