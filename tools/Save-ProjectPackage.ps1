@@ -1,4 +1,4 @@
-<#PSScriptInfo .VERSION 1.0.2#>
+<#PSScriptInfo .VERSION 1.0.3#>
 
 [CmdletBinding()]
 param (
@@ -13,4 +13,3 @@ function ImportTypeLibrary([string] $TypeLibPath, [string] $Namespace) {
 }
 
 ImportTypeLibrary 'C:\Windows\System32\wshom.ocx' 'IWshRuntimeLibrary'
-ImportTypeLibrary 'C:\Windows\System32\wbem\wbemdisp.tlb' 'WbemScripting'
